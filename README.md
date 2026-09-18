@@ -54,7 +54,7 @@ cd family-book-manager
 ```env
 # 随机字符串，务必修改
 JWT_SECRET=please-change-me-to-a-random-string
-# 仅首次启动（数据库中无用户时）用于创建默认管理员
+# 仅在首次启动（数据库为空）时创建默认管理员，之后不会再覆盖密码
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=123456
 DATABASE_URL=file:/app/data/dev.db
@@ -74,15 +74,23 @@ docker compose up -d --build
 
 摄像头 `getUserMedia` 要求安全上下文（HTTPS 或 localhost）。建议在 Lucky / Nginx 层套一层 HTTPS（如把 `18182` 转发到容器 `8182`），手机才能正常调用摄像头扫码。
 
-## 默认账号
+## 默认账号与密码
 
-| 用户名 | 密码 |
+首次启动（数据库为空）时自动创建：
+
+| 用户名 | 初始密码 |
 |---|---|
-| `admin` | `123456` |
+| `admin` | `123456`（可用 `ADMIN_PASSWORD` 环境变量覆盖） |
 
-> 种子脚本在每次启动时运行，具备两项**自愈/迁移**能力：
-> 1. **建管理员**：数据库中无用户时，用 `ADMIN_USERNAME` / `ADMIN_PASSWORD` 创建默认管理员。
-> 2. **密码自愈**：若已存在管理员，会校验其密码哈希是否与当前环境变量 `ADMIN_PASSWORD` 一致，不一致则自动重新哈希写回——所以改了环境变量后 `docker compose restart` 即可用新密码登录。登录后也可在「我的 → 修改密码」自助修改。
+**关于密码的三种情况：**
+
+1. **初始密码**：仅在首次启动、库中没有任何用户时创建。之后容器重启、修改 `.env` 都**不会**覆盖已有密码。
+2. **自定义密码（推荐）**：登录后在「我的 → 修改密码」中修改，修改后永久生效，重启容器也不会被重置。
+3. **忘记密码**：在宿主机执行一条容器命令即可重置（无需改环境变量、不丢数据）：
+   ```bash
+   docker exec -it family-book-manager node prisma/reset-password.js admin 新密码
+   ```
+   执行成功后直接用新密码登录。
 
 ## 成员类型迁移
 
@@ -97,7 +105,8 @@ docker compose up -d --build
 ```
 prisma/
   schema.prisma      # User / Member / Book / ReadingRecord 模型
-  seed.js            # 自愈种子：建管理员、同步密码、迁移成员类型
+  seed.js            # 启动种子：首次建管理员 + 迁移旧成员类型（不重置密码）
+  reset-password.js  # 忘记密码时容器内手动重置：node prisma/reset-password.js <用户> <新密码>
 src/
   middleware.ts      # 边缘中间件：除 /login、/api/auth、静态资源外都需登录
   lib/auth.ts        # JWT 签发/校验、bcrypt 封装、getSession()
@@ -130,11 +139,11 @@ docker-compose.yml   # 端口、env、volume、healthcheck
 - **豆瓣查不到书 / 封面刷不出来**：豆瓣对高频请求有风控（返回安全验证页），Google Books 在部分网络不可达。系统会自动依次尝试四个数据源；临时不可用时可改用自定义封面（拍照/相册）。
 - **页面更新后看起来没变化**：PWA (Service Worker) 缓存导致，下拉刷新或关闭页面重开一次即可；必要时在浏览器设置中清除站点数据。
 - **手机上点删除/确认没反应**：部分手机浏览器会静默拦截 `alert/confirm`，本项目已统一改为应用内弹窗确认。
-- **忘记密码 / 登录提示密码错误**：在 `.env` 中把 `ADMIN_PASSWORD` 改成新密码后 `docker compose restart`，启动种子脚本会自动把管理员密码同步重置为该值；也可进容器手动排查：
+- **忘记密码 / 登录提示密码错误**：自定义密码不受 `.env` 影响，重启也不会恢复默认值。在宿主机执行下面命令重置即可（数据不丢）：
   ```bash
-  docker exec -it family-book-manager sh
-  echo $ADMIN_PASSWORD   # 确认容器内实际生效的密码
+  docker exec -it family-book-manager node prisma/reset-password.js admin 新密码
   ```
+- **想彻底回到初始状态**：删除挂载目录下的 `data/dev.db` 后重新 `docker compose up -d`，会用 `.env` 中的 `ADMIN_PASSWORD` 重新创建账号（**会清空全部书籍和成员数据，谨慎操作**）。
 
 ## 许可证
 
