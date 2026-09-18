@@ -1,4 +1,4 @@
-# 家庭绘本管理 - Docker Compose 部署
+# 家庭图书管理系统 (FBM) - Docker Compose 部署
 # 飞牛OS / Debian Linux + Docker 24.x
 # 内部端口 8182（在 8000-8999 范围内），外网通过 Lucky 端口转发 18182 → 8182
 # SQLite 文件挂载到 NAS 持久化

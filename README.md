@@ -1,4 +1,4 @@
-# 家庭绘本管理 (Family Book Manager)
+# 家庭图书管理系统 (Family Book Manager · FBM)
 
 面向家庭场景的绘本/童书管理 PWA：**摄像头实时自动扫码录书**、成员管理、阅读记录、按年龄推荐、自定义封面与封面刮削，自带轻量管理员登录。专为飞牛 NAS（fnOS）Docker 部署设计，也可运行在任意 Linux 主机上。
 

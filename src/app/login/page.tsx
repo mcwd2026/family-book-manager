@@ -59,7 +59,7 @@ function LoginInner() {
           <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-2">
             <BookOpen size={28} />
           </div>
-          <CardTitle className="text-xl">家庭绘本管理</CardTitle>
+          <CardTitle className="text-xl">家庭图书管理系统</CardTitle>
           <p className="text-sm text-muted-foreground mt-1">请登录以继续</p>
         </CardHeader>
         <CardContent>

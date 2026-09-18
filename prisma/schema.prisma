@@ -1,4 +1,4 @@
-// Prisma schema - 家庭绘本管理系统
+// Prisma schema - 家庭图书管理系统 (Family Book Manager, FBM)
 // 数据库：SQLite（文件存储于 ./prisma/dev.db）
 
 generator client {

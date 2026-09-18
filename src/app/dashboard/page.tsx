@@ -84,7 +84,7 @@ export default function DashboardPage() {
       <div className="bg-gradient-to-br from-primary to-blue-600 text-primary-foreground px-4 pt-6 pb-8 rounded-b-3xl">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold">家庭绘本馆</h1>
+            <h1 className="text-2xl font-bold">家庭图书管理系统</h1>
             <p className="text-primary-foreground/80 text-sm mt-1">{formatDate(new Date())}</p>
           </div>
           <button

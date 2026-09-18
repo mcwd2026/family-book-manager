@@ -2,14 +2,14 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "家庭绘本管理",
-  description: "管理家庭绘本藏书，记录孩子的阅读时光",
+  title: "家庭图书管理系统",
+  description: "管理家庭图书藏书，记录孩子的阅读时光",
   manifest: "/manifest.json",
-  applicationName: "家庭绘本管理",
+  applicationName: "家庭图书管理系统",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "家庭绘本",
+    title: "家庭图书",
   },
   formatDetection: { telephone: false },
 };

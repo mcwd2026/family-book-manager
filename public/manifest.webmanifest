@@ -1,6 +1,6 @@
 {
-  "name": "家庭绘本管理",
-  "short_name": "绘本馆",
+  "name": "家庭图书管理系统",
+  "short_name": "家庭图书",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#ffffff",
