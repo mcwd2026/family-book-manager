@@ -1,0 +1,42 @@
+# 家庭绘本管理 - Docker Compose 部署
+# 飞牛OS / Debian Linux + Docker 24.x
+# 内部端口 8182（在 8000-8999 范围内），外网通过 Lucky 端口转发 18182 → 8182
+# SQLite 文件挂载到 NAS 持久化
+# 认证：默认管理员账号在 .env 中配置（admin/123456），首次启动自动创建
+services:
+  family-book-manager:
+    container_name: family-book-manager
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: family-book-manager:latest
+    restart: unless-stopped
+    ports:
+      - "8182:8182"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/dev.db
+      - TZ=Asia/Shanghai
+      - NEXT_TELEMETRY_DISABLED=1
+      - PORT=8182
+      # JWT 密钥：务必在 .env 中设置随机值（.env 已 gitignore）
+      - JWT_SECRET=${JWT_SECRET:-fbm-default-jwt-secret-change-me}
+      # 默认管理员账号（仅首次启动数据库为空时创建，之后可在「我的」页面修改密码）
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-123456}
+    volumes:
+      # SQLite 数据持久化到 NAS 目录
+      - ./data:/app/data
+    healthcheck:
+      # 登录页无需鉴权，作为健康检查目标
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8182/login"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - family-book-net
+
+networks:
+  family-book-net:
+    driver: bridge

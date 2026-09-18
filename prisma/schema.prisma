@@ -1,0 +1,80 @@
+// Prisma schema - 家庭绘本管理系统
+// 数据库：SQLite（文件存储于 ./prisma/dev.db）
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 管理员账号表（单管理员，用于登录保护 App）
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// 家庭成员表
+model Member {
+  id        String   @id @default(cuid())
+  name      String
+  // 成员类型：大人 / 小孩
+  type      String
+  // 出生日期（仅小孩填写，大人可空）
+  birthDate DateTime?
+  // 头像URL
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  readings ReadingRecord[]
+}
+
+// 书籍表
+model Book {
+  id        String   @id @default(cuid())
+  isbn      String?
+  title     String
+  author    String?
+  coverUrl  String?
+  // 自定义封面（本地拍照/相册图片的 dataURL，优先于 coverUrl 显示）
+  coverLocal String?
+  publisher String?
+  // 适读年龄范围
+  ageMin    Int?
+  ageMax    Int?
+  category  String?
+  // 状态：在库 / 已出售 / 已移除
+  status    String   @default("在库")
+  buyDate   DateTime?
+  sellDate  DateTime?
+  buyPrice  Float?
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  readings ReadingRecord[]
+}
+
+// 阅读记录表
+model ReadingRecord {
+  id        String   @id @default(cuid())
+  bookId    String
+  memberId  String
+  readDate  DateTime @default(now())
+  // 评分 1-5
+  rating    Int?
+  note      String?
+  createdAt DateTime @default(now())
+
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // 同一人同一本书只允许一条记录
+  @@unique([bookId, memberId])
+}

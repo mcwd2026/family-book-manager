@@ -1,0 +1,26 @@
+node_modules
+.next
+out
+build
+dist
+.env
+.env.local
+.env.production
+*.log
+.DS_Store
+
+# SQLite 数据库与备份（含真实书籍数据，禁止上传）
+data/
+*.db
+*.db-journal
+*.db.bak*
+prisma/migrations/dev.db*
+
+# PWA 生成产物
+public/sw.js
+public/workbox-*.js
+public/worker-*.js
+public/fallback-*.js
+public/sw.js.map
+public/workbox-*.js.map
+public/worker-*.js.map
