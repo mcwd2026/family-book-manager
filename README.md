@@ -92,20 +92,12 @@ docker compose up -d --build
    ```
    执行成功后直接用新密码登录。
 
-## 成员类型迁移
-
-种子脚本会在每次启动时**幂等**迁移旧数据：
-
-- `大人` → `成人`
-- `小孩` → `儿童`
-- 新增的 `青少年` 类型无需迁移，直接在成员编辑页选择即可
-
 ## 目录结构（要点）
 
 ```
 prisma/
   schema.prisma      # User / Member / Book / ReadingRecord 模型
-  seed.js            # 启动种子：首次建管理员 + 迁移旧成员类型（不重置密码）
+  seed.js            # 启动种子：首次建管理员（不重置密码、不做类型迁移）
   reset-password.js  # 忘记密码时容器内手动重置：node prisma/reset-password.js <用户> <新密码>
 src/
   middleware.ts      # 边缘中间件：除 /login、/api/auth、静态资源外都需登录

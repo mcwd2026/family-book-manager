@@ -1,6 +1,6 @@
 // 启动种子脚本：
-// 1) 数据库无用户时，创建默认管理员（仅首次启动生效，之后不再覆盖用户密码）
-// 2) 幂等迁移旧成员类型（大人→成人，小孩→儿童）
+// 数据库无用户时，创建默认管理员（仅首次启动生效，之后不再覆盖用户密码）
+// 成员类型固定为：成人 / 儿童 / 青少年（不再做运行时迁移）
 // 修改密码请在「我的 → 修改密码」中操作；忘记密码用 prisma/reset-password.js
 // 由 start.sh 在 db push 后调用，环境变量可覆盖默认账号密码
 const { PrismaClient } = require("@prisma/client");
@@ -21,13 +21,6 @@ async function main() {
     } else {
       // 已有用户：绝不重置密码，保留用户在页面上修改的自定义密码
       console.log("[seed] 已存在管理员账号，跳过初始化");
-    }
-
-    // 迁移旧成员类型（大人→成人，小孩→儿童），幂等可重复执行
-    const r1 = await prisma.member.updateMany({ where: { type: "大人" }, data: { type: "成人" } });
-    const r2 = await prisma.member.updateMany({ where: { type: "小孩" }, data: { type: "儿童" } });
-    if (r1.count || r2.count) {
-      console.log("[seed] 成员类型迁移: 大人→成人 " + r1.count + " 条, 小孩→儿童 " + r2.count + " 条");
     }
   } finally {
     await prisma.$disconnect();
