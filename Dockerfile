@@ -23,7 +23,7 @@ RUN npm run build
 # ---- Stage 3: runner ----
 FROM node:20-alpine AS runner
 WORKDIR /app
-RUN apk add --no-cache openssl libc6-compat
+RUN apk add --no-cache openssl libc6-compat su-exec
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
@@ -45,16 +45,16 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modul
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/bcryptjs ./node_modules/bcryptjs
 
 # 入口脚本 + 数据目录
-COPY --chown=nextjs:nodejs start.sh ./start.sh
-RUN chmod +x ./start.sh && mkdir -p /app/data && chown -R nextjs:nodejs /app/data
+COPY start.sh ./start.sh
+RUN chmod +x ./start.sh && mkdir -p /app/data
 
 # 默认环境变量（数据库文件挂载在 /app/data，外部可覆盖）
 ENV DATABASE_URL="file:/app/data/dev.db"
 ENV PORT=8182
 ENV HOSTNAME=0.0.0.0
 
-USER nextjs
+# 不切换 USER：start.sh 以 root 启动，先 chown 挂载卷，再用 su-exec 切换 nextjs 运行
 EXPOSE 8182
 
-# 入口：先同步 schema + 种子管理员，再启动
+# 入口：先同步 schema + 种子管理员 + chown，再以 nextjs 启动
 CMD ["./start.sh"]
