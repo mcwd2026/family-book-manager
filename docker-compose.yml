@@ -21,6 +21,8 @@ services:
       - PORT=8182
       # JWT 密钥：务必在 .env 中设置随机值（.env 已 gitignore）
       - JWT_SECRET=${JWT_SECRET:-fbm-default-jwt-secret-change-me}
+      # Secure Cookie：HTTPS 访问保持默认(true)；HTTP 直连（无反代）时改为 false，否则浏览器不保存登录态
+      - COOKIE_SECURE=${COOKIE_SECURE:-true}
       # 默认管理员账号（仅首次启动数据库为空时创建，之后可在「我的」页面修改密码）
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-123456}
