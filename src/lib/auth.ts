@@ -48,10 +48,15 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 // Cookie 配置（httpOnly + secure + sameSite）
+// secure 默认跟随生产环境；HTTP 直连部署（无 HTTPS）时设 COOKIE_SECURE=false 关闭
 export function cookieOptions() {
+  const secure =
+    process.env.COOKIE_SECURE !== undefined
+      ? process.env.COOKIE_SECURE === "true"
+      : process.env.NODE_ENV === "production";
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure,
     sameSite: "lax" as const,
     path: "/",
     maxAge: 60 * 60 * 24 * 7, // 7 天
