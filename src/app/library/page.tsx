@@ -41,6 +41,17 @@ export default function LibraryPage() {
   const [category, setCategory] = useState("");
   const [ageRange, setAgeRange] = useState("");
 
+  // 启动时从 localStorage 恢复书库视图模式（网格/列表），刷新后保持用户选择
+  useEffect(() => {
+    const saved = localStorage.getItem("library-view");
+    if (saved === "grid" || saved === "list") setView(saved);
+  }, []);
+
+  const changeView = (v: "grid" | "list") => {
+    setView(v);
+    localStorage.setItem("library-view", v);
+  };
+
   const load = useCallback(() => {
     setLoading(true);
     const params = new URLSearchParams();
@@ -75,13 +86,13 @@ export default function LibraryPage() {
         action={
           <div className="flex gap-1 border rounded-md p-0.5">
             <button
-              onClick={() => setView("grid")}
+              onClick={() => changeView("grid")}
               className={cn("p-1.5 rounded", view === "grid" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
             >
               <LayoutGrid size={16} />
             </button>
             <button
-              onClick={() => setView("list")}
+              onClick={() => changeView("list")}
               className={cn("p-1.5 rounded", view === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
             >
               <List size={16} />
