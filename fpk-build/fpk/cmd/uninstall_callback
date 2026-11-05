@@ -1,0 +1,3 @@
+#!/bin/bash
+# 卸载后：保留 data-share 中的数据库，便于重装恢复
+exit 0

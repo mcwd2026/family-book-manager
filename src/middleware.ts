@@ -29,7 +29,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // 保护所有路径，排除：登录页、认证 API、Next 静态资源、PWA 文件、图标
-    "/((?!login|api/auth|_next/static|_next/image|favicon|sw.js|manifest.json|icons|.*\\.(?:png|jpg|jpeg|svg|ico|webp|gif)$).*)",
+    // 保护所有路径，排除：登录页、认证 API、手机扫码接力页/API、Next 静态资源、PWA 文件、图标
+    "/((?!login|api/auth|api/scan/session|m/|_next/static|_next/image|favicon|sw.js|manifest.json|icons|.*\\.(?:png|jpg|jpeg|svg|ico|webp|gif)$).*)",
   ],
 };
