@@ -66,13 +66,13 @@ DATABASE_URL=file:/app/data/dev.db
 docker compose up -d --build
 ```
 
-- 内部端口：`8182`
+- 内部端口：`8112`
 - 健康检查：`/login`（公开页，无需鉴权）
 - SQLite 数据通过 `./data` 目录挂载持久化
 
 ### 4. 反向代理（可选）
 
-摄像头 `getUserMedia` 要求安全上下文（HTTPS 或 localhost）。建议在 Lucky / Nginx 层套一层 HTTPS（如把 `18182` 转发到容器 `8182`），手机才能正常调用摄像头扫码。
+摄像头 `getUserMedia` 要求安全上下文（HTTPS 或 localhost）。建议在 Lucky / Nginx 层套一层 HTTPS（如把 `18112` 转发到容器 `8112`），手机才能正常调用摄像头扫码。
 
 ## 默认账号与密码
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 # 家庭图书管理 FBM - fnOS 生命周期脚本
-# 启动 Next.js 服务（HTTP 8182）与手机扫码用 HTTPS 入口（8443）
+# 启动 Next.js 服务（HTTP 8112）与手机扫码用 HTTPS 入口（8443）
 export PATH=/var/apps/nodejs_v22/target/bin:$PATH
 
 APP_DIR="${TRIM_APPDEST}/server"
@@ -12,7 +12,7 @@ LOG_FILE="${VAR_DIR}/app.log"
 PID_FILE="${VAR_DIR}/app.pid"
 HTTPS_PID_FILE="${VAR_DIR}/https.pid"
 CERT_DIR="${VAR_DIR}/certs"
-HTTP_PORT=8182
+HTTP_PORT=8112
 HTTPS_PORT=8443
 
 mkdir -p "$VAR_DIR" "$DATA_DIR" "$CERT_DIR"

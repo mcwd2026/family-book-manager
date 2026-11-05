@@ -19,7 +19,7 @@ function firstHost(value: string | null): string {
   return (value || "").split(",")[0].trim();
 }
 
-// 桌面端入口是 http://NAS:8182，手机摄像头必须在安全上下文（HTTPS）下才能调用，
+// 桌面端入口是 http://NAS:8112，手机摄像头必须在安全上下文（HTTPS）下才能调用，
 // 因此默认把二维码指向应用自带的 HTTPS 端口（8443）。
 // 若当前页面本身已是 HTTPS（例如 NAS 已配置反向代理），则直接复用当前域名。
 export function buildPhoneUrl(req: Request, token: string): string {

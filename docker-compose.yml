@@ -1,6 +1,6 @@
 # 家庭图书管理系统 (FBM) - Docker Compose 部署
 # 飞牛OS / Debian Linux + Docker 24.x
-# 内部端口 8182（在 8000-8999 范围内），外网通过 Lucky 端口转发 18182 → 8182
+# 内部端口 8112（在 8000-8999 范围内），外网通过 Lucky 端口转发 18112 → 8112
 # SQLite 文件挂载到 NAS 持久化
 # 认证：默认管理员账号在 .env 中配置（admin/123456），首次启动自动创建
 services:
@@ -12,13 +12,13 @@ services:
     image: family-book-manager:latest
     restart: unless-stopped
     ports:
-      - "8182:8182"
+      - "8112:8112"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=file:/app/data/dev.db
       - TZ=Asia/Shanghai
       - NEXT_TELEMETRY_DISABLED=1
-      - PORT=8182
+      - PORT=8112
       # JWT 密钥：务必在 .env 中设置随机值（.env 已 gitignore）
       - JWT_SECRET=${JWT_SECRET:-fbm-default-jwt-secret-change-me}
       # Secure Cookie：HTTPS 访问保持默认(true)；HTTP 直连（无反代）时改为 false，否则浏览器不保存登录态
@@ -31,7 +31,7 @@ services:
       - ./data:/app/data
     healthcheck:
       # 登录页无需鉴权，作为健康检查目标
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8182/login"]
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8112/login"]
       interval: 30s
       timeout: 5s
       retries: 3

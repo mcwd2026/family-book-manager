@@ -1,11 +1,11 @@
 // 局域网 HTTPS 入口：手机浏览器只有在安全上下文（HTTPS）下才允许调用摄像头，
-// 因此把 8443 的 HTTPS 请求反向代理到本机的 Next.js 服务（默认 8182）。
+// 因此把 8443 的 HTTPS 请求反向代理到本机的 Next.js 服务（默认 8112）。
 const https = require("node:https");
 const http = require("node:http");
 const fs = require("node:fs");
 
 const HTTPS_PORT = Number(process.env.FBM_HTTPS_PORT || 8443);
-const TARGET_PORT = Number(process.env.PORT || 8182);
+const TARGET_PORT = Number(process.env.PORT || 8112);
 const CERT_FILE = process.env.FBM_CERT_FILE || "";
 const KEY_FILE = process.env.FBM_KEY_FILE || "";
 

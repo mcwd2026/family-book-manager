@@ -50,11 +50,11 @@ RUN chmod +x ./start.sh && mkdir -p /app/data
 
 # 默认环境变量（数据库文件挂载在 /app/data，外部可覆盖）
 ENV DATABASE_URL="file:/app/data/dev.db"
-ENV PORT=8182
+ENV PORT=8112
 ENV HOSTNAME=0.0.0.0
 
 # 不切换 USER：start.sh 以 root 启动，先 chown 挂载卷，再用 su-exec 切换 nextjs 运行
-EXPOSE 8182
+EXPOSE 8112
 
 # 入口：先同步 schema + 种子管理员 + chown，再以 nextjs 启动
 CMD ["./start.sh"]
