@@ -1,6 +1,6 @@
 #!/bin/bash
 # 家庭图书管理 FBM - fnOS 生命周期脚本
-# 启动 Next.js 服务（HTTP 8112）与手机扫码用 HTTPS 入口（8443）
+# 启动 Next.js 服务（HTTP 8112）
 export PATH=/var/apps/nodejs_v22/target/bin:$PATH
 
 APP_DIR="${TRIM_APPDEST}/server"
@@ -10,12 +10,9 @@ DATA_DIR="${TRIM_DATA_SHARE_PATHS%%:*}"
 
 LOG_FILE="${VAR_DIR}/app.log"
 PID_FILE="${VAR_DIR}/app.pid"
-HTTPS_PID_FILE="${VAR_DIR}/https.pid"
-CERT_DIR="${VAR_DIR}/certs"
 HTTP_PORT=8112
-HTTPS_PORT=8443
 
-mkdir -p "$VAR_DIR" "$DATA_DIR" "$CERT_DIR"
+mkdir -p "$VAR_DIR" "$DATA_DIR"
 
 log_msg() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
@@ -30,36 +27,6 @@ ensure_secret() {
   if [ ! -s "${VAR_DIR}/jwt.secret" ]; then
     head -c 64 /dev/urandom | od -An -tx1 | tr -d ' \n' > "${VAR_DIR}/jwt.secret"
   fi
-}
-
-# 手机摄像头要求 HTTPS：首次启动生成自签证书；openssl 不可用时用内置证书兜底
-ensure_cert() {
-  local cert="${CERT_DIR}/cert.pem"
-  local key="${CERT_DIR}/key.pem"
-  [ -s "$cert" ] && [ -s "$key" ] && return 0
-
-  if command -v openssl >/dev/null 2>&1; then
-    local san="DNS:localhost,IP:127.0.0.1"
-    for ip in $(hostname -I 2>/dev/null); do
-      case "$ip" in
-        *:*) continue ;;
-      esac
-      san="${san},IP:${ip}"
-    done
-    if openssl req -x509 -newkey rsa:2048 -sha256 -days 3650 -nodes \
-      -keyout "$key" -out "$cert" \
-      -subj "/CN=Family Book Manager" \
-      -addext "subjectAltName=${san}" >> "$LOG_FILE" 2>&1; then
-      chmod 600 "$key"
-      log_msg "已生成本地 HTTPS 证书（IP 访问首次需手动信任）"
-      return 0
-    fi
-  fi
-
-  cp "${APP_DIR}/certs/fallback-cert.pem" "$cert"
-  cp "${APP_DIR}/certs/fallback-key.pem" "$key"
-  chmod 600 "$key"
-  log_msg "已使用内置 HTTPS 证书"
 }
 
 prepare_db() {
@@ -95,7 +62,6 @@ start_app() {
 
   log_msg "启动 FBM..."
   ensure_secret
-  ensure_cert
   prepare_db
 
   export DATABASE_URL="file:${DATA_DIR}/dev.db"
@@ -104,59 +70,39 @@ start_app() {
   export NODE_ENV=production
   export PORT="$HTTP_PORT"
   export HOSTNAME=0.0.0.0
-  export FBM_HTTPS_PORT="$HTTPS_PORT"
 
   cd "$APP_DIR" || exit 1
   nohup node server.js >> "$LOG_FILE" 2>&1 &
   echo "$!" > "$PID_FILE"
-
-  # 等待 Web 服务就绪，再启动 HTTPS 入口
-  local i=0
-  while [ "$i" -lt 30 ]; do
-    if (echo > /dev/tcp/127.0.0.1/"$HTTP_PORT") >/dev/null 2>&1; then
-      break
-    fi
-    sleep 1
-    i=$((i + 1))
-  done
-
-  FBM_CERT_FILE="${CERT_DIR}/cert.pem" \
-    FBM_KEY_FILE="${CERT_DIR}/key.pem" \
-    PORT="$HTTP_PORT" \
-    FBM_HTTPS_PORT="$HTTPS_PORT" \
-    nohup node https-proxy.js >> "$LOG_FILE" 2>&1 &
-  echo "$!" > "$HTTPS_PID_FILE"
 }
 
 stop_app() {
   log_msg "停止 FBM..."
-  for f in "$HTTPS_PID_FILE" "$PID_FILE"; do
-    [ -f "$f" ] || continue
-    pid="$(head -n 1 "$f" | tr -d '[:space:]')"
+  if [ -f "$PID_FILE" ]; then
+    local pid
+    pid="$(head -n 1 "$PID_FILE" | tr -d '[:space:]')"
     if check_process "$pid"; then
       kill -TERM "$pid" 2>/dev/null || true
     fi
-  done
+  fi
 
   local i=0
   while [ "$i" -lt 10 ]; do
     local alive=0
-    for f in "$HTTPS_PID_FILE" "$PID_FILE"; do
-      [ -f "$f" ] || continue
-      pid="$(head -n 1 "$f" | tr -d '[:space:]')"
+    if [ -f "$PID_FILE" ]; then
+      pid="$(head -n 1 "$PID_FILE" | tr -d '[:space:]')"
       check_process "$pid" && alive=1
-    done
+    fi
     [ "$alive" -eq 0 ] && break
     sleep 1
     i=$((i + 1))
   done
 
-  for f in "$HTTPS_PID_FILE" "$PID_FILE"; do
-    [ -f "$f" ] || continue
-    pid="$(head -n 1 "$f" | tr -d '[:space:]')"
+  if [ -f "$PID_FILE" ]; then
+    pid="$(head -n 1 "$PID_FILE" | tr -d '[:space:]')"
     check_process "$pid" && kill -KILL "$pid" 2>/dev/null || true
-    rm -f "$f"
-  done
+    rm -f "$PID_FILE"
+  fi
 }
 
 case "$1" in

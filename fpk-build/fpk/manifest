@@ -1,7 +1,7 @@
 appname = fbm
-version = 1.0.2
+version = 1.0.3
 display_name = 家庭图书管理
-desc = <p>面向家庭场景的绘本/童书管理应用：藏书、成员、阅读记录、按年龄推荐与 ISBN 扫码入库。</p><p><b>手机摄像头扫码：</b>在桌面端「扫码录入」页点击生成二维码，用手机扫码即可直接调用手机摄像头扫书背 ISBN，扫描结果实时回传到 NAS 页面，无需每次手动输入。</p><p>提示：手机浏览器要求 HTTPS 才能调用摄像头。应用已内置 8443 HTTPS 入口（自签证书），首次打开提示证书不受信任时选择继续访问即可；也可在 NAS 反向代理上配置 HTTPS 后使用。</p>
+desc = <p>面向家庭场景的绘本/童书管理应用：藏书、成员、阅读记录、按年龄推荐与 ISBN 扫码入库。</p><p><b>ISBN 扫码：</b>在「扫码录入」页直接拍照或从相册选择照片识别书背条形码（相机需在 HTTPS 环境下使用）。</p><p><b>数据备份：</b>「我的 → 数据备份与迁移」支持图书、成员、阅读记录的一键导入导出，便于定期备份与换机迁移。</p>
 source = thirdparty
 platform = all
 maintainer = 卧倒
@@ -15,5 +15,5 @@ checkport = true
 ctl_stop = true
 install_dep_apps = nodejs_v22
 disable_authorization_path = true
-changelog = 1.0.2 恢复浏览器访问与账号登录模式；保留「我的 → 数据备份与迁移」，支持图书、成员、阅读记录的一键导入导出。
-checksum = c6bf8917599ad03917fe73ea58b5381e
+changelog = 1.0.3 移除桌面端二维码接力扫码面板，精简为拍照识别 ISBN；保留图书、成员、阅读记录的一键导入导出。
+checksum = 999b44d112bd1c90e676283b63f8a336

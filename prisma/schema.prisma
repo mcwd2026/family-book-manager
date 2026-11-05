@@ -63,28 +63,6 @@ model Book {
   readings ReadingRecord[]
 }
 
-// 手机扫码会话：桌面端生成二维码，手机端凭 token 提交 ISBN
-model ScanSession {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  createdAt DateTime @default(now())
-  expiresAt DateTime
-
-  items ScanItem[]
-}
-
-model ScanItem {
-  id        String   @id @default(cuid())
-  sessionId String
-  isbn      String
-  createdAt DateTime @default(now())
-
-  session ScanSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-
-  @@unique([sessionId, isbn])
-  @@index([sessionId])
-}
-
 // 阅读记录表
 model ReadingRecord {
   id        String   @id @default(cuid())

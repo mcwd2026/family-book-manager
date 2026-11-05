@@ -14,7 +14,6 @@ import { BottomNav } from "@/components/bottom-nav";
 import { PageHeader } from "@/components/page-header";
 import { Loading } from "@/components/ui/loading";
 import { CoverPicker } from "@/components/ui/cover-picker";
-import { QrHandoff } from "@/components/ui/qr-handoff";
 
 interface BookInfo {
   title: string;
@@ -475,14 +474,6 @@ export default function ScanPage() {
       <PageHeader title="扫码录入" subtitle="扫一扫 ISBN，自动获取书籍信息" />
 
       <div className="px-4 space-y-4">
-        {/* 电脑端：手机摄像头接力扫码 */}
-        <QrHandoff
-          onPick={(code) => {
-            setIsbn(code);
-            queryIsbn(code);
-          }}
-        />
-
         {/* 拍照识别区 */}
         <Card>
           <CardContent className="p-4">

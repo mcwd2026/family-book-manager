@@ -4,7 +4,7 @@
     "items": [
       {
         "type": "tips",
-        "helpText": "FBM 会在 NAS 上启动 Web 服务（端口 8112），并额外开启 8443 HTTPS 入口供手机调用摄像头扫码。"
+        "helpText": "FBM 会在 NAS 上启动 Web 服务（端口 8112），安装后从桌面图标打开即可。"
       },
       {
         "type": "tips",
@@ -16,7 +16,7 @@
       },
       {
         "type": "tips",
-        "helpText": "手机首次打开扫码页时，浏览器会提示 HTTPS 证书不受信任（自签证书），选择「继续访问」即可正常使用摄像头。"
+        "helpText": "「扫码录入」支持拍照识别 ISBN 条形码；调用相机需要 HTTPS 环境（如 NAS 反向代理已配置 HTTPS）。"
       }
     ]
   }
