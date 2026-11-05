@@ -1,7 +1,6 @@
 #!/bin/bash
 # 家庭图书管理 FBM - fnOS 生命周期脚本
-# Next.js 仅监听本机 8112，对外通过 fnOS 统一网关（app.sock）访问；
-# 另开 8443 HTTPS 入口供手机调用摄像头扫码
+# 启动 Next.js 服务（HTTP 8112）与手机扫码用 HTTPS 入口（8443）
 export PATH=/var/apps/nodejs_v22/target/bin:$PATH
 
 APP_DIR="${TRIM_APPDEST}/server"
@@ -12,8 +11,6 @@ DATA_DIR="${TRIM_DATA_SHARE_PATHS%%:*}"
 LOG_FILE="${VAR_DIR}/app.log"
 PID_FILE="${VAR_DIR}/app.pid"
 HTTPS_PID_FILE="${VAR_DIR}/https.pid"
-GATEWAY_PID_FILE="${VAR_DIR}/gateway.pid"
-GATEWAY_SOCKET="${TRIM_APPDEST}/app.sock"
 CERT_DIR="${VAR_DIR}/certs"
 HTTP_PORT=8112
 HTTPS_PORT=8443
@@ -106,20 +103,14 @@ start_app() {
   export COOKIE_SECURE=false
   export NODE_ENV=production
   export PORT="$HTTP_PORT"
-  # 只监听回环地址：外部访问统一走 fnOS 网关，避免绕过身份校验
-  export HOSTNAME=127.0.0.1
+  export HOSTNAME=0.0.0.0
   export FBM_HTTPS_PORT="$HTTPS_PORT"
-  export FBM_GATEWAY_MODE=true
-  export FBM_GATEWAY_SOCKET="$GATEWAY_SOCKET"
-  export FBM_GATEWAY_PREFIX="/app/fbm"
-  export NEXT_BASE_PATH="/app/fbm"
 
-  rm -f "$GATEWAY_SOCKET"
   cd "$APP_DIR" || exit 1
   nohup node server.js >> "$LOG_FILE" 2>&1 &
   echo "$!" > "$PID_FILE"
 
-  # 等待 Web 服务就绪，再启动 HTTPS 入口与统一网关 Socket
+  # 等待 Web 服务就绪，再启动 HTTPS 入口
   local i=0
   while [ "$i" -lt 30 ]; do
     if (echo > /dev/tcp/127.0.0.1/"$HTTP_PORT") >/dev/null 2>&1; then
@@ -135,17 +126,11 @@ start_app() {
     FBM_HTTPS_PORT="$HTTPS_PORT" \
     nohup node https-proxy.js >> "$LOG_FILE" 2>&1 &
   echo "$!" > "$HTTPS_PID_FILE"
-
-  FBM_GATEWAY_SOCKET="$GATEWAY_SOCKET" \
-    FBM_GATEWAY_PREFIX="/app/fbm" \
-    PORT="$HTTP_PORT" \
-    nohup node gateway-socket.js >> "$LOG_FILE" 2>&1 &
-  echo "$!" > "$GATEWAY_PID_FILE"
 }
 
 stop_app() {
   log_msg "停止 FBM..."
-  for f in "$GATEWAY_PID_FILE" "$HTTPS_PID_FILE" "$PID_FILE"; do
+  for f in "$HTTPS_PID_FILE" "$PID_FILE"; do
     [ -f "$f" ] || continue
     pid="$(head -n 1 "$f" | tr -d '[:space:]')"
     if check_process "$pid"; then
@@ -156,7 +141,7 @@ stop_app() {
   local i=0
   while [ "$i" -lt 10 ]; do
     local alive=0
-    for f in "$GATEWAY_PID_FILE" "$HTTPS_PID_FILE" "$PID_FILE"; do
+    for f in "$HTTPS_PID_FILE" "$PID_FILE"; do
       [ -f "$f" ] || continue
       pid="$(head -n 1 "$f" | tr -d '[:space:]')"
       check_process "$pid" && alive=1
@@ -166,13 +151,12 @@ stop_app() {
     i=$((i + 1))
   done
 
-  for f in "$GATEWAY_PID_FILE" "$HTTPS_PID_FILE" "$PID_FILE"; do
+  for f in "$HTTPS_PID_FILE" "$PID_FILE"; do
     [ -f "$f" ] || continue
     pid="$(head -n 1 "$f" | tr -d '[:space:]')"
     check_process "$pid" && kill -KILL "$pid" 2>/dev/null || true
     rm -f "$f"
   done
-  rm -f "$GATEWAY_SOCKET"
 }
 
 case "$1" in

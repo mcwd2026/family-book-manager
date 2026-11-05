@@ -23,11 +23,9 @@ function firstHost(value: string | null): string {
 // 因此默认把二维码指向应用自带的 HTTPS 端口（8443）。
 // 若当前页面本身已是 HTTPS（例如 NAS 已配置反向代理），则直接复用当前域名。
 export function buildPhoneUrl(req: Request, token: string): string {
-  // fnOS 统一网关模式使用 basePath（/app/fbm）
-  const prefix = process.env.NEXT_BASE_PATH || "";
   const override = process.env.FBM_PHONE_BASE_URL?.trim();
   if (override) {
-    return `${override.replace(/\/$/, "")}${prefix}/m/${token}`;
+    return `${override.replace(/\/$/, "")}/m/${token}`;
   }
 
   const headers = req.headers;
@@ -43,8 +41,8 @@ export function buildPhoneUrl(req: Request, token: string): string {
   if (proto === "https") {
     // 反向代理 / 原生 HTTPS 访问：手机直接打开当前域名下的同一路径
     const hostForUrl = host || hostname;
-    return `https://${hostForUrl}${prefix}/m/${token}`;
+    return `https://${hostForUrl}/m/${token}`;
   }
 
-  return `https://${hostname}:${httpsPort}${prefix}/m/${token}`;
+  return `https://${hostname}:${httpsPort}/m/${token}`;
 }

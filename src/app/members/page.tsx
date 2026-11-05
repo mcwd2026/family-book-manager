@@ -182,24 +182,20 @@ export default function MembersPage() {
                 <User size={22} />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-medium truncate">{username || "飞牛用户"}</div>
-                <div className="text-xs text-muted-foreground">
-                  {process.env.NEXT_PUBLIC_FBM_GATEWAY_MODE === "true" ? "飞牛 NAS 账号（免登录）" : "登录账号"}
-                </div>
+                <div className="font-medium truncate">{username || "未登录"}</div>
+                <div className="text-xs text-muted-foreground">登录账号</div>
               </div>
             </div>
-            {process.env.NEXT_PUBLIC_FBM_GATEWAY_MODE !== "true" && (
-              <div className="flex gap-2 mt-4">
-                <Button variant="outline" size="sm" className="flex-1" onClick={openChangePassword}>
-                  <KeyRound size={14} className="mr-1.5" />
-                  修改密码
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1 text-destructive hover:text-destructive" onClick={handleLogout}>
-                  <LogOut size={14} className="mr-1.5" />
-                  退出登录
-                </Button>
-              </div>
-            )}
+            <div className="flex gap-2 mt-4">
+              <Button variant="outline" size="sm" className="flex-1" onClick={openChangePassword}>
+                <KeyRound size={14} className="mr-1.5" />
+                修改密码
+              </Button>
+              <Button variant="outline" size="sm" className="flex-1 text-destructive hover:text-destructive" onClick={handleLogout}>
+                <LogOut size={14} className="mr-1.5" />
+                退出登录
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
