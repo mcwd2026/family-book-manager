@@ -1,15 +1,27 @@
 "use client";
-// 数据备份页：导出/导入图书、成员、阅读记录（移动端优先）
+// 数据备份页：导出/导入图书、成员、阅读记录（移动端优先，不使用原生 confirm）
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Download, Upload, Database, CheckCircle2, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 
-interface ImportResult {
+interface ImportCounts {
   books: number;
   members: number;
   readings: number;
+}
+
+interface BackupData {
+  books: unknown[];
+  members: unknown[];
+  readings: unknown[];
+}
+
+interface PendingImport {
+  data: BackupData;
+  counts: ImportCounts;
 }
 
 export default function BackupPage() {
@@ -18,6 +30,11 @@ export default function BackupPage() {
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [pending, setPending] = useState<PendingImport | null>(null);
+
+  function resetFile() {
+    if (fileRef.current) fileRef.current.value = "";
+  }
 
   async function handleExport() {
     setExporting(true);
@@ -52,34 +69,44 @@ export default function BackupPage() {
       parsed = JSON.parse(await file.text());
     } catch {
       setError("文件不是有效的 JSON 备份");
+      resetFile();
       return;
     }
-    const data = (parsed as { data?: { books?: unknown; members?: unknown; readings?: unknown } })?.data;
+    const data = (parsed as { data?: BackupData })?.data;
     if (!data || !Array.isArray(data.books) || !Array.isArray(data.members) || !Array.isArray(data.readings)) {
       setError("备份文件格式不正确");
+      resetFile();
       return;
     }
-    const ok = window.confirm(
-      `将导入 ${data.books.length} 本图书、${data.members.length} 位成员、${data.readings.length} 条阅读记录。\n\n导入会覆盖现有全部数据，确定继续吗？`
-    );
-    if (!ok) return;
+    // 用应用内弹窗确认，避免移动端浏览器/WebView 屏蔽原生 confirm
+    setPending({
+      data,
+      counts: { books: data.books.length, members: data.members.length, readings: data.readings.length },
+    });
+  }
 
+  async function confirmImport() {
+    if (!pending || importing) return;
     setImporting(true);
+    setError("");
+    setMessage("");
     try {
       const res = await fetch("/api/backup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data }),
+        body: JSON.stringify({ data: pending.data }),
       });
       const result = await res.json();
       if (!result.success) throw new Error(result.message || "导入失败");
-      const counts = result.data as ImportResult;
+      const counts = result.data as ImportCounts;
+      setPending(null);
       setMessage(`导入完成：${counts.books} 本图书、${counts.members} 位成员、${counts.readings} 条阅读记录`);
     } catch (e) {
+      setPending(null);
       setError(e instanceof Error ? e.message : "导入失败，请检查备份文件");
     } finally {
       setImporting(false);
-      if (fileRef.current) fileRef.current.value = "";
+      resetFile();
     }
   }
 
@@ -120,25 +147,26 @@ export default function BackupPage() {
             <p className="text-xs text-muted-foreground mt-1">
               选择之前导出的 JSON 备份文件。导入会覆盖当前全部数据，请先做好备份。
             </p>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="application/json,.json"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleFile(file);
-              }}
-            />
-            <Button
-              variant="outline"
-              className="w-full mt-3"
-              onClick={() => fileRef.current?.click()}
-              disabled={importing}
+            {/* label 直接触发文件选择，移动端 WebView 中比隐藏 input + click() 更可靠 */}
+            <label
+              className={`${buttonVariants({ variant: "outline" })} w-full mt-3 cursor-pointer ${
+                importing ? "pointer-events-none opacity-50" : ""
+              }`}
             >
               <Upload size={16} className="mr-1.5" />
               {importing ? "正在导入..." : "选择备份文件并导入"}
-            </Button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".json,application/json,text/plain,application/octet-stream"
+                className="sr-only"
+                disabled={importing}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleFile(file);
+                }}
+              />
+            </label>
           </CardContent>
         </Card>
 
@@ -155,6 +183,31 @@ export default function BackupPage() {
           </div>
         )}
       </div>
+
+      {/* 导入确认弹窗 */}
+      <Dialog open={!!pending} onClose={() => { if (!importing) { setPending(null); resetFile(); } }}>
+        <h2 className="text-lg font-bold mb-2">确认导入数据</h2>
+        <p className="text-sm text-muted-foreground">
+          将导入 {pending?.counts.books ?? 0} 本图书、{pending?.counts.members ?? 0} 位成员、
+          {pending?.counts.readings ?? 0} 条阅读记录。
+        </p>
+        <p className="text-sm text-destructive bg-destructive/5 border border-destructive/20 rounded-md px-3 py-2 mt-3">
+          导入会覆盖现有全部数据，且不可恢复。建议先导出当前数据做好备份。
+        </p>
+        <div className="flex gap-2 pt-4">
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={() => { setPending(null); resetFile(); }}
+            disabled={importing}
+          >
+            取消
+          </Button>
+          <Button variant="destructive" className="flex-1" onClick={confirmImport} disabled={importing}>
+            {importing ? "正在导入..." : "确认导入"}
+          </Button>
+        </div>
+      </Dialog>
     </div>
   );
 }

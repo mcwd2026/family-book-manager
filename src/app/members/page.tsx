@@ -39,6 +39,10 @@ export default function MembersPage() {
   const [editing, setEditing] = useState<Member | null>(null);
   const [form, setForm] = useState({ name: "", type: "儿童", birthDate: "", avatar: "" });
   const [submitting, setSubmitting] = useState(false);
+  // 删除确认弹窗（不依赖浏览器原生 confirm，移动端 WebView 中更可靠）
+  const [deleteTarget, setDeleteTarget] = useState<Member | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   // 改密码弹窗
   const [pwdOpen, setPwdOpen] = useState(false);
@@ -102,12 +106,26 @@ export default function MembersPage() {
     }
   }
 
-  async function remove(m: Member) {
-    if (!confirm(`确认删除「${m.name}」？相关阅读记录也会一并删除。`)) return;
-    const res = await fetch(`/api/members/${m.id}`, { method: "DELETE" });
-    const result = await res.json();
-    if (result.success) load();
-    else alert(result.message);
+  function askRemove(m: Member) {
+    setDeleteError("");
+    setDeleteTarget(m);
+  }
+
+  async function confirmRemove() {
+    if (!deleteTarget || deleting) return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const res = await fetch(`/api/members/${deleteTarget.id}`, { method: "DELETE" });
+      const result = await res.json();
+      if (!result.success) throw new Error(result.message || "删除失败");
+      setDeleteTarget(null);
+      load();
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : "删除失败，请重试");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   function openChangePassword() {
@@ -258,12 +276,22 @@ export default function MembersPage() {
                       </div>
                       <ChevronRight size={16} className="text-muted-foreground" />
                     </Link>
-                    <div className="flex flex-col gap-1">
-                      <button onClick={() => openEdit(m)} className="p-1.5 text-muted-foreground hover:text-primary">
-                        <Pencil size={14} />
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        aria-label={`编辑${m.name}`}
+                        onClick={() => openEdit(m)}
+                        className="p-2.5 rounded-md text-muted-foreground active:bg-accent hover:text-primary"
+                      >
+                        <Pencil size={16} />
                       </button>
-                      <button onClick={() => remove(m)} className="p-1.5 text-muted-foreground hover:text-destructive">
-                        <Trash2 size={14} />
+                      <button
+                        type="button"
+                        aria-label={`删除${m.name}`}
+                        onClick={() => askRemove(m)}
+                        className="p-2.5 rounded-md text-muted-foreground active:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </div>
@@ -310,6 +338,25 @@ export default function MembersPage() {
               {submitting ? "保存中..." : "保存"}
             </Button>
           </div>
+        </div>
+      </Dialog>
+
+      {/* 删除确认弹窗 */}
+      <Dialog open={!!deleteTarget} onClose={() => { if (!deleting) setDeleteTarget(null); }}>
+        <h2 className="text-lg font-bold mb-2">删除家庭成员</h2>
+        <p className="text-sm text-muted-foreground">
+          确认删除「{deleteTarget?.name}」？相关阅读记录也会一并删除，此操作不可恢复。
+        </p>
+        {deleteError && (
+          <div className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2 mt-3">{deleteError}</div>
+        )}
+        <div className="flex gap-2 pt-4">
+          <Button variant="outline" className="flex-1" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+            取消
+          </Button>
+          <Button variant="destructive" className="flex-1" onClick={confirmRemove} disabled={deleting}>
+            {deleting ? "删除中..." : "确认删除"}
+          </Button>
         </div>
       </Dialog>
 

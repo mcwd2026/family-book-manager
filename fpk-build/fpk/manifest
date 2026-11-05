@@ -1,5 +1,5 @@
 appname = fbm
-version = 1.0.3
+version = 1.0.4
 display_name = 家庭图书管理
 desc = <p>面向家庭场景的绘本/童书管理应用：藏书、成员、阅读记录、按年龄推荐与 ISBN 扫码入库。</p><p><b>ISBN 扫码：</b>在「扫码录入」页直接拍照或从相册选择照片识别书背条形码（相机需在 HTTPS 环境下使用）。</p><p><b>数据备份：</b>「我的 → 数据备份与迁移」支持图书、成员、阅读记录的一键导入导出，便于定期备份与换机迁移。</p>
 source = thirdparty
@@ -15,5 +15,5 @@ checkport = true
 ctl_stop = true
 install_dep_apps = nodejs_v22
 disable_authorization_path = true
-changelog = 1.0.3 移除桌面端二维码接力扫码面板，精简为拍照识别 ISBN；保留图书、成员、阅读记录的一键导入导出。
-checksum = 999b44d112bd1c90e676283b63f8a336
+changelog = 1.0.4 修复手机端浏览器/WebView 中删除成员与导入备份无确认弹窗的问题：改用应用内确认弹窗；导入改用 label 直接触发文件选择，提升移动端兼容性。
+checksum = 7a644e56378a1152bd6886a417d83ab4
