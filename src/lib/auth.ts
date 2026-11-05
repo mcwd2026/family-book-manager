@@ -1,7 +1,7 @@
 // 认证工具：JWT 签发/校验 + 密码哈希 + 会话获取
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 
 const ALG = "HS256";
@@ -63,8 +63,34 @@ export function cookieOptions() {
   };
 }
 
+// fnOS 统一网关身份：网关校验通过后会转发 X-Trim-Userid / X-Trim-Username
+export async function getGatewayIdentity() {
+  if (process.env.FBM_GATEWAY_MODE !== "true") return null;
+  const h = await headers();
+  const uid = h.get("x-trim-userid");
+  if (!uid) return null;
+  return {
+    uid,
+    username: h.get("x-trim-username") || "fnOS",
+    isAdmin: h.get("x-trim-isadmin") === "true",
+    gateway: true as const,
+  };
+}
+
 // 获取当前登录用户（用于 Server Component / API Route 鉴权）
 export async function getSession() {
+  const gateway = await getGatewayIdentity();
+  if (gateway) {
+    // 家庭共享数据：所有通过 fnOS 网关进入的用户共用同一份数据
+    let user = await prisma.user.findFirst();
+    if (!user) {
+      user = await prisma.user.create({
+        data: { username: gateway.username, passwordHash: "fnos-gateway" },
+      });
+    }
+    return user;
+  }
+
   const store = await cookies();
   const token = store.get(AUTH_COOKIE)?.value;
   if (!token) return null;

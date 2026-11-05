@@ -4,9 +4,10 @@
       "title": "家庭图书管理",
       "icon": "images/icon_{0}.png",
       "type": "iframe",
-      "protocol": "http",
-      "port": "8112",
-      "url": "/",
+      "protocol": "",
+      "gatewayPrefix": "/app/fbm",
+      "gatewaySocket": "app.sock",
+      "url": "/app/fbm",
       "allUsers": true
     }
   }

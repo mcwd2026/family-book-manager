@@ -11,8 +11,17 @@ function getSecret(): Uint8Array {
 }
 
 export async function middleware(req: NextRequest) {
+  const basePath = req.nextUrl.basePath || "";
+  // fnOS 统一网关模式：网关已校验 NAS 登录态，并通过 Header 传递用户身份
+  if (process.env.FBM_GATEWAY_MODE === "true") {
+    if (req.headers.get("x-trim-userid")) {
+      return NextResponse.next();
+    }
+    return NextResponse.rewrite(new URL(`${basePath}/gateway-required`, req.url));
+  }
+
   const token = req.cookies.get(COOKIE_NAME)?.value;
-  const loginUrl = new URL("/login", req.url);
+  const loginUrl = new URL(`${basePath}/login`, req.url);
   if (!token) {
     loginUrl.searchParams.set("redirect", req.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
@@ -29,7 +38,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // 保护所有路径，排除：登录页、认证 API、手机扫码接力页/API、Next 静态资源、PWA 文件、图标
-    "/((?!login|api/auth|api/scan/session|m/|_next/static|_next/image|favicon|sw.js|manifest.json|icons|.*\\.(?:png|jpg|jpeg|svg|ico|webp|gif)$).*)",
+    // 保护所有路径，排除：登录页、网关提示页、认证 API、手机扫码接力页/API、Next 静态资源、PWA 文件、图标
+    "/((?!login|gateway-required|api/auth|api/scan/session|m/|_next/static|_next/image|favicon|sw.js|manifest.json|icons|.*\\.(?:png|jpg|jpeg|svg|ico|webp|gif)$).*)",
   ],
 };

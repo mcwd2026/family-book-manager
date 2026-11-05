@@ -87,12 +87,14 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-bold">家庭图书管理系统</h1>
             <p className="text-primary-foreground/80 text-sm mt-1">{formatDate(new Date())}</p>
           </div>
-          <button
-            onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); window.location.href = "/login"; }}
-            className="text-primary-foreground/80 hover:text-primary-foreground text-sm flex items-center gap-1 shrink-0 mt-1"
-          >
-            <LogOut size={16} /> 退出
-          </button>
+          {process.env.NEXT_PUBLIC_FBM_GATEWAY_MODE !== "true" && (
+            <button
+              onClick={async () => { await fetch("/api/auth/logout", { method: "POST" }); window.location.href = "/login"; }}
+              className="text-primary-foreground/80 hover:text-primary-foreground text-sm flex items-center gap-1 shrink-0 mt-1"
+            >
+              <LogOut size={16} /> 退出
+            </button>
+          )}
         </div>
 
         {/* 统计卡片 */}

@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Plus, Pencil, Trash2, ChevronRight, UserPlus, KeyRound, LogOut, User } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronRight, UserPlus, KeyRound, LogOut, User, Database } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -182,22 +182,44 @@ export default function MembersPage() {
                 <User size={22} />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-medium truncate">{username || "未登录"}</div>
-                <div className="text-xs text-muted-foreground">登录账号</div>
+                <div className="font-medium truncate">{username || "飞牛用户"}</div>
+                <div className="text-xs text-muted-foreground">
+                  {process.env.NEXT_PUBLIC_FBM_GATEWAY_MODE === "true" ? "飞牛 NAS 账号（免登录）" : "登录账号"}
+                </div>
               </div>
             </div>
-            <div className="flex gap-2 mt-4">
-              <Button variant="outline" size="sm" className="flex-1" onClick={openChangePassword}>
-                <KeyRound size={14} className="mr-1.5" />
-                修改密码
-              </Button>
-              <Button variant="outline" size="sm" className="flex-1 text-destructive hover:text-destructive" onClick={handleLogout}>
-                <LogOut size={14} className="mr-1.5" />
-                退出登录
-              </Button>
-            </div>
+            {process.env.NEXT_PUBLIC_FBM_GATEWAY_MODE !== "true" && (
+              <div className="flex gap-2 mt-4">
+                <Button variant="outline" size="sm" className="flex-1" onClick={openChangePassword}>
+                  <KeyRound size={14} className="mr-1.5" />
+                  修改密码
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1 text-destructive hover:text-destructive" onClick={handleLogout}>
+                  <LogOut size={14} className="mr-1.5" />
+                  退出登录
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* 数据备份 */}
+      <div className="px-4 mt-5">
+        <Link href="/backup" className="block">
+          <Card>
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <Database size={20} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="font-medium">数据备份与迁移</div>
+                <div className="text-xs text-muted-foreground">导出/导入图书、成员与阅读记录</div>
+              </div>
+              <ChevronRight size={18} className="text-muted-foreground shrink-0" />
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* 家庭成员管理 */}

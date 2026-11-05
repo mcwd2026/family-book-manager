@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { FetchBasePath } from "@/components/fetch-base-path";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -31,6 +32,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body className="antialiased min-h-screen pb-14 max-w-md mx-auto bg-background">
+        <FetchBasePath />
         {children}
       </body>
     </html>

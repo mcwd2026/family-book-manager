@@ -26,16 +26,18 @@ if (!cert || !key) {
 }
 
 const server = https.createServer({ cert, key }, (req, res) => {
+  // 手机直连只用于扫码页，不携带 fnOS 网关身份，避免伪造身份头
+  const headers = { ...req.headers, "x-forwarded-proto": "https" };
+  for (const name of Object.keys(headers)) {
+    if (name.toLowerCase().startsWith("x-trim-")) delete headers[name];
+  }
   const proxyReq = http.request(
     {
       host: "127.0.0.1",
       port: TARGET_PORT,
       path: req.url,
       method: req.method,
-      headers: {
-        ...req.headers,
-        "x-forwarded-proto": "https",
-      },
+      headers,
     },
     (proxyRes) => {
       res.writeHead(proxyRes.statusCode || 502, proxyRes.headers);
